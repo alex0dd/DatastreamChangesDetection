@@ -22,12 +22,13 @@ class MartingaleTest:
         self.changes_history = []
         
     def strangeness(self, T, x_i):
-        #T = np.array(T)
-        centroid = np.mean(T) # compute cluster of T (unlabeled training set)
+        """
+        T: np.array or list of shape [B, Dim]
+        x_i: np.array of shape [1, Dim]
+        """
+        centroid = np.mean(T, axis=0) # compute cluster of T (unlabeled training set)
         strangeness_x_i = np.linalg.norm(x_i - centroid)
-        #T = T[:, np.newaxis]
-        #strangeness_T = np.linalg.norm(T - centroid, axis=1)
-        return strangeness_x_i#, strangeness_T.tolist()
+        return strangeness_x_i
     
     def compute_p_value(self, strangeness_total):
         strangeness_total = np.array(strangeness_total)
@@ -59,9 +60,7 @@ class MartingaleTest:
             strangeness_x_i = 0.0
         else:
             # compute strangeness of x_i and data points in T
-            #strangeness_x_i, strangeness_T = self.strangeness(self.T, x_i)
             strangeness_x_i = self.strangeness(self.T, x_i)
-            #self.strangeness_total = strangeness_T
         self.strangeness_total.append(strangeness_x_i)
         # compute P-values p_i using (7)
         p_values = self.compute_p_value(self.strangeness_total)
