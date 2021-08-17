@@ -11,7 +11,7 @@ def metrics_in_range(gt, pred, interval):
             if np.abs(p - g) <= interval:
                 in_interval_pred += 1
                 break
-    precision = in_interval_pred / total_pred
-    recall = in_interval_pred / total_gt
+    precision = in_interval_pred / total_pred if total_pred != 0.0 else 0.0
+    recall = min(in_interval_pred / total_gt, 1.0)
     f1 = 2*(recall*precision)/(recall+precision) if (recall != 0.0 and precision != 0.0) else 0.0
     return {"precision": precision, "recall": recall, "F1": f1}
