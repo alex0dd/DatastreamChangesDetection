@@ -1,12 +1,13 @@
 import pandas as pd
 
-def load_cavitation_single_type(base_path, fnames_list, verbose=0):
+def load_cavitation_single_type(base_path, fnames_list, verbose=0, df_offset=0):
     dfs_to_concat = []
-    for fname in fnames_list:
+    for idx, fname in enumerate(fnames_list):
         fpath = base_path + fname + ".csv"
         if verbose:
             print("Loading", fpath)
         df = pd.read_csv(fpath, sep='\t')
+        df["stream_idx"] = df_offset + idx
         if verbose:
             print("Loaded", fpath)
         dfs_to_concat.append(df)
@@ -23,9 +24,9 @@ def load_cavitation_data(base_path, data_csvs_dict, verbose=0):
     """
     df_okay = load_cavitation_single_type(base_path, data_csvs_dict["OK"], verbose=verbose)
     df_okay["status"] = 0
-    df_in = load_cavitation_single_type(base_path, data_csvs_dict["IN"], verbose=verbose)
+    df_in = load_cavitation_single_type(base_path, data_csvs_dict["IN"], verbose=verbose, df_offset=len(data_csvs_dict["OK"]))
     df_in["status"] = 1
-    df_standing = load_cavitation_single_type(base_path, data_csvs_dict["STANDING"], verbose=verbose)
+    df_standing = load_cavitation_single_type(base_path, data_csvs_dict["STANDING"], verbose=verbose, df_offset=len(data_csvs_dict["OK"] + data_csvs_dict["IN"]))
     df_standing["status"] = 2
     df_merged = pd.concat([df_okay, df_in, df_standing], sort=False)
     del df_okay, df_in, df_standing
