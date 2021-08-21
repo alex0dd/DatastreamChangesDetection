@@ -3,6 +3,24 @@ import numpy as np
 def approx_equal(a, b, tol=10**-6):
     return np.abs(a - b) < tol
 
+def run_martingale_tester(tester, series):
+    """
+    Given a martingale tester and a time series, 
+    apply the tester to detect changes.
+    """
+    test_values = []
+    if type(series) == np.ndarray:
+        series_iterator = enumerate(series)
+    else:
+        # pandas series
+        series_iterator = series.items()
+    for time, sample in series_iterator:
+        sample_d = [sample] 
+        test_value = tester.step(sample_d)
+        test_values.append(test_value)
+    test_values = np.array(test_values)
+    return tester.changes_history
+
 class MartingaleTest:
     
     def __init__(self, lmb, epsilon=0.98):
@@ -32,18 +50,16 @@ class MartingaleTest:
     
     def compute_p_value(self, strangeness_total):
         strangeness_total = np.array(strangeness_total)
-        p_values = []
-        for i in range(len(strangeness_total)):
-            theta_i = np.random.uniform()
-            p_val = (
-                np.sum(strangeness_total[:i] > strangeness_total[i]) + \
-                theta_i * np.sum(approx_equal(strangeness_total[:i], strangeness_total[i])) \
-            ) / (i + 1)
-            # NOTE: p_val can be <= only in case when we have a single strangeness value
-            if p_val <= 0:
-                p_val = 1.
-            p_values.append(p_val)
-        return np.array(p_values)
+        theta_j = np.random.uniform()
+        i = len(strangeness_total) - 1 # current time step
+        p_val = (
+            np.sum(strangeness_total[:i] > strangeness_total[i]) + \
+            theta_j * np.sum(approx_equal(strangeness_total[:i], strangeness_total[i])) \
+        ) / (i + 1)
+        # NOTE: p_val can be <= only in case when we have a single strangeness value
+        if p_val <= 0.0:
+            p_val = 1. / (i + 1)
+        return p_val
         
     def step(self, observation):
         """
@@ -63,8 +79,7 @@ class MartingaleTest:
             strangeness_x_i = self.strangeness(self.T, x_i)
         self.strangeness_total.append(strangeness_x_i)
         # compute P-values p_i using (7)
-        p_values = self.compute_p_value(self.strangeness_total)
-        p_i = p_values[-1]
+        p_i = self.compute_p_value(self.strangeness_total)
         M_i_1 = self.M[-1]
         # Compute M(i) using (6)
         M_i = self.epsilon * (p_i ** (self.epsilon - 1.0)) * M_i_1
