@@ -1,7 +1,58 @@
 import numpy as np
+from utils.metrics import metrics_in_range
 
 def approx_equal(a, b, tol=10**-6):
     return np.abs(a - b) < tol
+    
+def martingale_tester_grid_search(dataset, changes_gt, epsilon_range, m_range, interval, verbose=0):
+    """
+    Given a dataset and ranges of epsilon and M parameters, perform a grid search
+    to find the configuration of MartingaleTester(e, M) that gives the best F1 score
+    wrt the given interval.
+    
+    Params:
+        - dataset (np.ndarray): dataset on which to perform the grid search
+        - changes_gt (List[int]): list of indexes in which change in stream has occurred
+        - epsilon_range (List[float]): range of epsilon parameters
+        - m_range (List[float]): range of M parameters
+        - interval (float): interval of prediction to use when computing F1 score
+    Returns:
+        - best_params: dictionary with best parameters
+        - (precision, recall): precision and recall lists for all the tested parameters
+    """
+    # grid search
+    #epsilon = [0.80, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98]
+    #M = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    # interval window inside which we consider a predicted change to hold true
+    # note that 1 unit of interval corresponds to 3 seconds of real time.
+    #interval = 15
+    best_params = {"F1": 0.0, "params": None}
+    precision_list = []
+    recall_list = []
+    e_list = []
+    m_list = []
+    f1_list = []
+    for e in epsilon_range:
+        for m in m_range:
+            martingale_tester = MartingaleTest(m, epsilon=e)
+            changes_pred = run_martingale_tester(
+                martingale_tester,
+                dataset
+            )
+            metrics = metrics_in_range(gt=changes_gt, pred=changes_pred, interval=interval)
+            if metrics["F1"] > best_params["F1"]:
+                best_params["F1"] = metrics["F1"]
+                best_params["recall"] = metrics["recall"]
+                best_params["precision"] = metrics["precision"]
+                best_params["params"] = (e, m)
+            precision_list.append(metrics["precision"])
+            recall_list.append(metrics["recall"])
+            e_list.append(e)
+            m_list.append(m)
+            f1_list.append(metrics["F1"])
+            if verbose:
+                print("e={}, m={}, F1={}, Recall={}".format(e, m, metrics["F1"], metrics["recall"]))
+    return best_params, (precision_list, recall_list, e_list, m_list, f1_list)
 
 def run_martingale_tester(tester, series):
     """
