@@ -1,4 +1,28 @@
 import matplotlib.pyplot as plt
+import plotly.express as px
+
+def plot_precision_recall_curve(plot_df):
+    """
+    Plots a dataframe with the following format:
+    (Precision, Recall, epsilon, M, F1)
+    """
+    fig = px.scatter(
+        plot_df, 
+        x="Precision", y="Recall", 
+        hover_data=["epsilon", "M", "F1"], 
+        width=600, height=600,
+    )
+    fig.update_xaxes(range=[0.0, 1.1])
+    fig.update_yaxes(range=[0.0, 1.1])
+    fig.update_layout(
+        title={
+            'text': "Precision/Recall Curve",
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        }
+    )
+    fig.show()
 
 def get_plot_color(n_samples, sample_idx, max_intensity=0.8):
     return (max_intensity / n_samples) * sample_idx
