@@ -55,6 +55,7 @@ def get_cavitation_features(df):
     }
     
 def average_signal_columns(df):
+    df = pd.DataFrame.copy(df)
     df["average_column"] = (df["P1_x"] + df["P1_y"] + df["P1_z"] + df["P2_x"] + df["P2_y"] + df["P2_z"])/6
     return df.drop(columns=["P1_x", "P1_y", "P1_z", "P2_x", "P2_y", "P2_z"])
 
