@@ -1,0 +1,4 @@
+matplotlib
+scikit-learn
+plotly==5.2.1
+pandas
