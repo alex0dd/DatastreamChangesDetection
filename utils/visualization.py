@@ -32,7 +32,7 @@ def print_changes_time(df_indices, changes):
     for change_idx in changes:
         print("\t{}".format(df_indices[change_idx]))
 
-def plot_total_df(df, title, changes=None, max_intensity=0.6, print_changes=True):
+def plot_total_df(df, title, changes=None, max_intensity=0.6, gt_changes=None, print_changes=True):
     fig = plt.figure(figsize=(40, 10))
     ax = fig.add_subplot(111)
     df.plot(ax=ax)
@@ -51,6 +51,21 @@ def plot_total_df(df, title, changes=None, max_intensity=0.6, print_changes=True
         end_idx = df_indices[-1]
         color = (1, 0, 0, get_plot_color(len(changes) + 1, len(changes) + 1, max_intensity=max_intensity))
         ax.axvspan(start_idx, end_idx, color=color)
+    
+    if gt_changes is not None:
+        plt.vlines(
+            gt_changes, 
+            df.min() * 1.5, 
+            df.max() * 1.5, 
+            color="green", 
+            linewidths=5.0,
+            linestyles ="dashed"
+        )
+        try:
+            plt.ylim(df.min().item() * 1.2, df.max().item() * 1.2)
+        except:
+            # quick hack to get min regardless of series/dataframe
+            plt.ylim(df.min() * 1.2, df.max() * 1.2)
                 
     plt.title(title)
     plt.show()
